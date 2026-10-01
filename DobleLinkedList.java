@@ -1,11 +1,10 @@
 public class DobleLinkedList{
     public static void main (String[] args){
-        Nodo nodoA = new Nodo(10);
-        Nodo nodoB = new Nodo(20);
-        nodoA.siguiente = nodoB;
-        //System.out.println(nodoA.dato);
-        //System.out.println(nodoB.dato);
-        System.out.println(nodoA.siguiente.dato);
+        LinkedList miLista = new LinkedList();
+        miLista.insertarAlPrincipio(10);
+        miLista.insertarAlFiinal(20);
+        miLista.insertarAlFiinal(30);
+        miLista.imprimirLista();
     }
 }
 
@@ -48,5 +47,16 @@ class LinkedList{
         }
 
         temp.siguiente = nuevoNodo;
+    }
+    public void imprimirLista(){
+        
+        Nodo temp = this.cabeza;
+        
+        while (temp != null) {
+            System.out.print(temp.dato + " -> ");
+            temp = temp.siguiente;
+        }
+
+        System.out.print("null");
     }
 }
