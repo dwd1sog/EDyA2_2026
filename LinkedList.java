@@ -1,6 +1,6 @@
-public class DobleLinkedList{
+public class LinkedList{
     public static void main (String[] args){
-        LinkedList miLista = new LinkedList();
+        List miLista = new List();
         miLista.insertarAlPrincipio(10);
         miLista.insertarAlFiinal(20);
         miLista.insertarAlFiinal(30);
@@ -18,11 +18,11 @@ class Nodo{
     }
 }
 
-class LinkedList{
+class List{
     
     Nodo cabeza;
 
-    public LinkedList(){
+    public List(){
         this.cabeza = null;
     }
 
