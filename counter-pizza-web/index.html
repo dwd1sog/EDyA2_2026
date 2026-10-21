@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Counter Pizza - Sistema Táctico de Despacho Mirage</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="main-header">
+        <div class="header-container">
+            <h1>🍕 COUNTER PIZZA <span class="badge">MIRAGE LOGISTICS</span></h1>
+            <p class="subtitle">Sistema Táctico de Gestión de Pedidos y Enrutamiento con Dijkstra - David Bocanegra González</p>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="app-container">
+        <!-- COLUMNA IZQUIERDA: FORMULARIO Y MENU -->
+        <aside class="panel-left">
+            <div class="card">
+                <h2>📋 Armar Pedido de Pizza</h2>
+                
+                <!-- Búsqueda Trie Autocompletado -->
+                <div class="form-group">
+                    <label for="inputPizza">Buscar Pizza (Trie):</label>
+                    <div class="autocomplete-wrapper">
+                        <input type="text" id="inputPizza" placeholder="Escribe 'Pep...', 'Haw...', 'BBQ'..." autocomplete="off">
+                        <div id="sugerenciasTrie" class="suggestions-list"></div>
+                    </div>
+                </div>
+
+                <!-- Seleccionar Tamaño -->
+                <div class="form-group">
+                    <label for="selectTamano">Tamaño:</label>
+                    <select id="selectTamano">
+                        <option value="Personal" data-precio="12.00">Personal (S) - $12.00</option>
+                        <option value="Mediana" data-precio="16.00" selected>Mediana (M) - $16.00</option>
+                        <option value="Familiar" data-precio="20.00">Familiar (L) - $20.00</option>
+                    </select>
+                </div>
+
+                <!-- Adicionales / Toppings -->
+                <div class="form-group">
+                    <label>Ingredientes Adicionales (+$1.50 c/u):</label>
+                    <div class="checkbox-grid">
+                        <label><input type="checkbox" class="topping-cb" value="Queso Extra" data-precio="1.50"> Queso Extra</label>
+                        <label><input type="checkbox" class="topping-cb" value="Champiñones" data-precio="1.50"> Champiñones</label>
+                        <label><input type="checkbox" class="topping-cb" value="Tocino" data-precio="1.50"> Tocino</label>
+                        <label><input type="checkbox" class="topping-cb" value="Jalapeños" data-precio="1.50"> Jalapeños</label>
+                        <label><input type="checkbox" class="topping-cb" value="Doble Carne" data-precio="2.00"> Doble Carne</label>
+                    </div>
+                </div>
+
+                <!-- Datos del Cliente y Destino -->
+                <div class="form-group">
+                    <label for="inputCliente">Nombre del Cliente:</label>
+                    <input type="text" id="inputCliente" placeholder="Ej. Juan Pérez" value="Cliente Mirage">
+                </div>
+
+                <div class="form-group">
+                    <label for="selectDestino">Destino en Mirage:</label>
+                    <select id="selectDestino">
+                        <option value="A Site">A Site (Sitio A)</option>
+                        <option value="B Site" selected>B Site (Sitio B)</option>
+                        <option value="Palace">Palace</option>
+                        <option value="A Ramp">A Ramp</option>
+                        <option value="Mid">Mid (Centro)</option>
+                        <option value="Window">Window</option>
+                        <option value="Connector">Connector</option>
+                        <option value="Ladder Room">Ladder Room</option>
+                        <option value="TV">TV Room</option>
+                        <option value="Apps">Apps (Apartamentos)</option>
+                        <option value="Short B">Short B</option>
+                        <option value="Jungle">Jungle</option>
+                        <option value="CT Spawn">CT Spawn</option>
+                    </select>
+                </div>
+
+                <!-- Resumen de Pizza Actual -->
+                <div class="pizza-summary-box">
+                    <div class="summary-line"><strong>Pizza:</strong> <span id="summaryNombre">Seleccione...</span></div>
+                    <div class="summary-line"><strong>Toppings:</strong> <span id="summaryToppings">Ninguno</span></div>
+                    <div class="summary-line price-line"><strong>Precio Total:</strong> <span id="summaryPrecio">$0.00</span></div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="btn-group">
+                    <button id="btnDeshacer" class="btn btn-warning">↩️ Deshacer (Pila LIFO)</button>
+                    <button id="btnEncolar" class="btn btn-primary">➕ Añadir a la Cola (FIFO)</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- COLUMNA DERECHA: MAPA CANVAS Y CONTROLES TÁCTICOS -->
+        <section class="panel-right">
+            <div class="card">
+                <div class="map-controls">
+                    <button id="btnGenerarEnemigo" class="btn btn-danger">⚠️ Simular Enemigo (Bloqueo)</button>
+                    <button id="btnReiniciarMapa" class="btn btn-secondary">🔄 Despejar Mapa</button>
+                    <button id="btnDespachar" class="btn btn-success">🚀 Despachar Siguiente Pedido</button>
+                </div>
+
+                <!-- Alerta Táctica Status -->
+                <div id="statusAlert" class="status-banner">
+                    <span id="statusText">Ruta lista. Presiona 'Despachar Siguiente Pedido' para enviar.</span>
+                </div>
+
+                <!-- Contenedor del Mapa Canvas -->
+                <div class="canvas-wrapper">
+                    <canvas id="mapaCanvas" width="900" height="600"></canvas>
+                    <div id="fallbackImagePicker" class="image-picker-overlay hidden">
+                        <p>No se encontró la imagen <code>mapa.png</code> automáticamente.</p>
+                        <label for="fileInputMapa" class="btn btn-secondary">📁 Cargar mapa.png manualmente</label>
+                        <input type="file" id="fileInputMapa" accept="image/*" style="display:none;">
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- SECCIÓN INFERIOR: COLA FIFO E HISTORIAL -->
+    <section class="bottom-container">
+        <div class="card">
+            <h2>⏳ Cola de Atención de Pedidos (FIFO)</h2>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Cliente</th>
+                            <th>Pizza / Tamaño</th>
+                            <th>Adicionales</th>
+                            <th>Destino</th>
+                            <th>Precio</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaColaBody">
+                        <tr><td colspan="7" class="empty-msg">No hay pedidos pendientes en la cola FIFO.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header-flex">
+                <h2>📜 Historial de Pedidos Despachados (localStorage)</h2>
+                <button id="btnLimpiarHistorial" class="btn btn-sm btn-danger">🗑️ Limpiar Historial</button>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha / Hora</th>
+                            <th>Cliente</th>
+                            <th>Detalle</th>
+                            <th>Ruta Calculada (Dijkstra)</th>
+                            <th>Tiempo</th>
+                            <th>Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaHistorialBody">
+                        <tr><td colspan="7" class="empty-msg">No hay historial registrado.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <script src="app.js"></script>
+</body>
+</html>
