@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class Challenge08_ArbolBinario {
+public class Tree {
 
     public static void main(String[] args) {
         ArbolBinario arbol = new ArbolBinario();
